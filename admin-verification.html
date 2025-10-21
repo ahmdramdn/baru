@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Verifikasi Pembayaran</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+      --primary: #0d2b5e;
+      --secondary: #ff9800;
+      --success: #4caf50;
+      --danger: #f44336;
+      --warning: #ff9800;
+      --white: #ffffff;
+      --light: #f8f9fa;
+      --gray: #757575;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      padding-bottom: 20px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, #1a4d8f 100%);
+      color: white;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      margin-bottom: 24px;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .refresh-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .refresh-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 24px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-icon {
+      font-size: 40px;
+      width: 70px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+    }
+
+    .stat-icon.pending {
+      background: #fff3e0;
+      color: var(--warning);
+    }
+
+    .stat-icon.verified {
+      background: #e8f5e9;
+      color: var(--success);
+    }
+
+    .stat-icon.rejected {
+      background: #ffebee;
+      color: var(--danger);
+    }
+
+    .stat-info h3 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stat-info p {
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .filter-tab {
+      padding: 10px 20px;
+      border-radius: 20px;
+      background: white;
+      color: var(--gray);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      border: 2px solid transparent;
+    }
+
+    .filter-tab.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .verification-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+    }
+
+    .verification-card:hover {
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--gray);
+    }
+
+    .status-badge {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-pending {
+      background: #fff3e0;
+      color: var(--warning);
+    }
+
+    .status-verified {
+      background: #e8f5e9;
+      color: var(--success);
+    }
+
+    .status-rejected {
+      background: #ffebee;
+      color: var(--danger);
+    }
+
+    .card-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      color: var(--gray);
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .amount {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .proof-section {
+      background: #f8f9fa;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .proof-label {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .proof-placeholder {
+      width: 100%;
+      max-width: 300px;
+      height: 200px;
+      background: white;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-approve {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-approve:hover {
+      background: #388e3c;
+      transform: translateY(-2px);
+    }
+
+    .btn-reject {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-reject:hover {
+      background: #d32f2f;
+      transform: translateY(-2px);
+    }
+
+    .btn-view {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-view:hover {
+      background: #1a4d8f;
+    }
+
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gray);
+    }
+
+    .loading-spinner {
+      font-size: 48px;
+      color: var(--primary);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--gray);
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: var(--radius);
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    textarea.form-input {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card-details {
+        grid-template-columns: 1fr;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <div class="header-content">
+      <div class="header-title">
+        <i class="fas fa-shield-alt"></i> Admin - Verifikasi Pembayaran
+      </div>
+      <button class="refresh-btn" onclick="loadVerifications()">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon pending">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="statPending">0</h3>
+          <p>Menunggu Verifikasi</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon verified">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="statVerified">0</h3>
+          <p>Terverifikasi</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon rejected">
+          <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="statRejected">0</h3>
+          <p>Ditolak</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-tabs">
+      <div class="filter-tab active" data-filter="all" onclick="filterVerifications('all')">
+        Semua
+      </div>
+      <div class="filter-tab" data-filter="pending" onclick="filterVerifications('pending')">
+        Pending
+      </div>
+      <div class="filter-tab" data-filter="verified" onclick="filterVerifications('verified')">
+        Terverifikasi
+      </div>
+      <div class="filter-tab" data-filter="rejected" onclick="filterVerifications('rejected')">
+        Ditolak
+      </div>
+    </div>
+
+    <div id="loadingState" class="loading">
+      <div class="loading-spinner">
+        <i class="fas fa-circle-notch"></i>
+      </div>
+      <div style="margin-top: 16px;">Memuat data...</div>
+    </div>
+
+    <div id="verificationList" style="display: none;"></div>
+  </div>
+
+  <div class="modal" id="rejectModal">
+    <div class="modal-content">
+      <div class="modal-title">Tolak Pembayaran</div>
+      <div class="form-group">
+        <label class="form-label">Alasan Penolakan *</label>
+        <textarea class="form-input" id="rejectReason" placeholder="Masukkan alasan penolakan..."></textarea>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-reject" style="flex: 2;" onclick="confirmReject()">
+          <i class="fas fa-times"></i> Tolak Pembayaran
+        </button>
+        <button class="btn" style="background: #e0e0e0; color: #333;" onclick="closeRejectModal()">
+          Batal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxG_jlWMIVMElBfbkfVHZSZabcjJguLItRd4RySs_DiaJroTHR1ulOR57g-dOIF9gWDDw/exec';
+    
+    let allVerifications = [];
+    let currentFilter = 'all';
+    let selectedVerificationId = null;
+
+    window.addEventListener('DOMContentLoaded', function() {
+      loadVerifications();
+    });
+
+    async function loadVerifications() {
+      showLoading();
+      
+      try {
+        const response = await fetch(APPS_SCRIPT_URL + '?action=getPendingVerifications');
+        const data = await response.json();
+        
+        if (data.success) {
+          allVerifications = data.data;
+          updateStats();
+          displayVerifications(currentFilter);
+          hideLoading();
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        hideLoading();
+        alert('Gagal memuat data: ' + error.message);
+      }
+    }
+
+    function updateStats() {
+      const pending = allVerifications.filter(v => v.status === 'pending').length;
+      const verified = allVerifications.filter(v => v.status === 'verified').length;
+      const rejected = allVerifications.filter(v => v.status === 'rejected').length;
+      
+      document.getElementById('statPending').textContent = pending;
+      document.getElementById('statVerified').textContent = verified;
+      document.getElementById('statRejected').textContent = rejected;
+    }
+
+    function filterVerifications(filter) {
+      currentFilter = filter;
+      
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      displayVerifications(filter);
+    }
+
+    function displayVerifications(filter) {
+      const container = document.getElementById('verificationList');
+      container.innerHTML = '';
+      
+      const filtered = filter === 'all' 
+        ? allVerifications 
+        : allVerifications.filter(v => v.status === filter);
+      
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+            <div>Tidak ada data verifikasi</div>
+          </div>
+        `;
+        return;
+      }
+      
+      filtered.forEach(verification => {
+        const card = createVerificationCard(verification);
+        container.appendChild(card);
+      });
+    }
+
+    function createVerificationCard(v) {
+      const card = document.createElement('div');
+      card.className = 'verification-card';
+      
+      const statusClass = `status-${v.status}`;
+      const statusText = v.status === 'pending' ? 'Menunggu' : 
+                        v.status === 'verified' ? 'Terverifikasi' : 'Ditolak';
+      
+      const actionButtons = v.status === 'pending' ? `
+        <div class="action-buttons">
+          <button class="btn btn-approve" onclick="approvePayment(${v.verificationId})">
+            <i class="fas fa-check"></i> Setujui
+          </button>
+          <button class="btn btn-reject" onclick="openRejectModal(${v.verificationId})">
+            <i class="fas fa-times"></i> Tolak
+          </button>
+        </div>
+      ` : `
+        <div class="action-buttons">
+          <button class="btn btn-view" disabled>
+            <i class="fas fa-info-circle"></i> ${statusText}
+          </button>
+        </div>
+      `;
+      
+      card.innerHTML = `
+        <div class="card-header">
+          <div>
+            <div class="card-title">${v.paymentName}</div>
+            <div class="card-subtitle">
+              <i class="fas fa-user"></i> ${v.studentName || 'N/A'} | 
+              <i class="fas fa-clock"></i> ${formatDateTime(v.submittedAt)}
+            </div>
+          </div>
+          <span class="status-badge ${statusClass}">${statusText}</span>
+        </div>
+        
+        <div class="card-details">
+          <div class="detail-item">
+            <div class="detail-label">Jumlah</div>
+            <div class="detail-value amount">${formatCurrency(v.amount)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Metode</div>
+            <div class="detail-value">${v.paymentMethod}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">ID Siswa</div>
+            <div class="detail-value">${v.studentId || 'N/A'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">ID Payment</div>
+            <div class="detail-value">#${v.paymentId}</div>
+          </div>
+        </div>
+        
+        <div class="proof-section">
+          <div class="proof-label">
+            <i class="fas fa-file-image"></i> Bukti Transfer
+          </div>
+          <div class="proof-placeholder">
+            📄 ${v.proofFileName}
+          </div>
+        </div>
+        
+        ${v.notes ? `<div style="padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px; font-size: 13px;"><strong>Catatan:</strong> ${v.notes}</div>` : ''}
+        
+        ${actionButtons}
+      `;
+      
+      return card;
+    }
+
+    async function approvePayment(verificationId) {
+      if (!confirm('Setujui pembayaran ini?')) return;
+      
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'verifyPayment',
+            verificationId: verificationId,
+            adminNotes: 'Approved by admin'
+          })
+        });
+        
+        alert('Pembayaran berhasil disetujui!');
+        loadVerifications();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Gagal menyetujui pembayaran');
+      }
+    }
+
+    function openRejectModal(verificationId) {
+      selectedVerificationId = verificationId;
+      document.getElementById('rejectModal').classList.add('active');
+      document.getElementById('rejectReason').value = '';
+    }
+
+    function closeRejectModal() {
+      document.getElementById('rejectModal').classList.remove('active');
+      selectedVerificationId = null;
+    }
+
+    async function confirmReject() {
+      const reason = document.getElementById('rejectReason').value.trim();
+      
+      if (!reason) {
+        alert('Masukkan alasan penolakan!');
+        return;
+      }
+      
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'rejectPayment',
+            verificationId: selectedVerificationId,
+            reason: reason
+          })
+        });
+        
+        alert('Pembayaran berhasil ditolak!');
+        closeRejectModal();
+        loadVerifications();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Gagal menolak pembayaran');
+      }
+    }
+
+    function formatCurrency(amount) {
+      return 'Rp ' + parseInt(amount).toLocaleString('id-ID');
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleString('id-ID', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function showLoading() {
+      document.getElementById('loadingState').style.display = 'block';
+      document.getElementById('verificationList').style.display = 'none';
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('verificationList').style.display = 'block';
+    }
+  </script>
+</body>
+
+</html>

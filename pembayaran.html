@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pembayaran</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+      --primary: #0d2b5e;
+      --secondary: #ff9800;
+      --success: #4caf50;
+      --warning: #ff9800;
+      --danger: #f44336;
+      --light: #f8f9fa;
+      --white: #ffffff;
+      --gray: #757575;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      padding-bottom: 70px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, #1a4d8f 100%);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .back-button {
+      font-size: 24px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .back-button:hover {
+      transform: translateX(-3px);
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .refresh-button {
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .refresh-button:hover {
+      transform: rotate(180deg);
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gray);
+    }
+
+    .loading-spinner {
+      font-size: 48px;
+      color: var(--secondary);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    .summary-card {
+      background: linear-gradient(135deg, var(--primary) 0%, #1a4d8f 100%);
+      color: white;
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .summary-title {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    .summary-amount {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-icon {
+      color: var(--secondary);
+    }
+
+    .payment-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border-left: 4px solid transparent;
+    }
+
+    .payment-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .payment-card.paid {
+      border-left-color: var(--success);
+    }
+
+    .payment-card.pending {
+      border-left-color: var(--warning);
+    }
+
+    .payment-card.overdue {
+      border-left-color: var(--danger);
+    }
+
+    .payment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .payment-info h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .payment-period {
+      font-size: 13px;
+      color: var(--gray);
+    }
+
+    .payment-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-paid {
+      background: #e8f5e9;
+      color: var(--success);
+    }
+
+    .status-pending {
+      background: #fff3e0;
+      color: var(--warning);
+    }
+
+    .status-overdue {
+      background: #ffebee;
+      color: var(--danger);
+    }
+
+    .payment-details {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    .detail-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .payment-amount {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .btn-action {
+      background: var(--secondary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-action:hover {
+      background: #f57c00;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+    }
+
+    .btn-action:active {
+      transform: translateY(0);
+    }
+
+    .btn-paid {
+      background: #e0e0e0;
+      color: var(--gray);
+      cursor: not-allowed;
+    }
+
+    .btn-paid:hover {
+      background: #e0e0e0;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .filter-tab {
+      padding: 10px 20px;
+      border-radius: 20px;
+      background: var(--white);
+      color: var(--gray);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      border: 2px solid transparent;
+    }
+
+    .filter-tab:hover {
+      background: var(--light);
+    }
+
+    .filter-tab.active {
+      background: var(--secondary);
+      color: white;
+      border-color: var(--secondary);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      display: flex;
+      justify-content: space-around;
+      padding: 14px 0;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: var(--gray);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background: var(--light);
+    }
+
+    .nav-item.active {
+      color: var(--secondary);
+      background: rgba(255, 152, 0, 0.1);
+    }
+
+    .nav-icon {
+      font-size: 22px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gray);
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-text {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .error-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--danger);
+    }
+
+    .error-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .error-text {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .error-details {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 16px;
+    }
+
+    .btn-retry {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-retry:hover {
+      background: #1a4d8f;
+      transform: translateY(-2px);
+    }
+
+    .last-update {
+      text-align: center;
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 20px;
+      padding: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .payment-details {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <div class="back-button" onclick="goBack()">
+      <i class="fas fa-arrow-left"></i>
+    </div>
+    <div class="header-title">Pembayaran</div>
+    <div class="refresh-button" onclick="loadPaymentData()">
+      <i class="fas fa-sync-alt"></i>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="loadingState" class="loading">
+      <div class="loading-spinner">
+        <i class="fas fa-circle-notch"></i>
+      </div>
+      <div class="loading-text">Memuat data pembayaran...</div>
+    </div>
+
+    <div id="mainContent" style="display: none;">
+      <div class="summary-card">
+        <div class="summary-title">Total Tagihan</div>
+        <div class="summary-amount" id="totalAmount">Rp 0</div>
+        <div class="summary-stats">
+          <div class="stat-item">
+            <div class="stat-value" id="paidCount">0</div>
+            <div class="stat-label">Lunas</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="pendingCount">0</div>
+            <div class="stat-label">Tertunda</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="overdueCount">0</div>
+            <div class="stat-label">Terlambat</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-tabs">
+        <div class="filter-tab active" data-filter="all">Semua</div>
+        <div class="filter-tab" data-filter="pending">Tertunda</div>
+        <div class="filter-tab" data-filter="paid">Lunas</div>
+        <div class="filter-tab" data-filter="overdue">Terlambat</div>
+      </div>
+
+      <div class="section-title">
+        <i class="fas fa-history section-icon"></i>
+        Riwayat Pembayaran
+      </div>
+
+      <div id="paymentList"></div>
+
+      <div class="last-update" id="lastUpdate">
+        Terakhir diperbarui: -
+      </div>
+    </div>
+
+    <div id="errorState" class="error-state" style="display: none;">
+      <div class="error-icon">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+      <div class="error-text">Gagal Memuat Data</div>
+      <div class="error-details" id="errorMessage">Pastikan URL Apps Script sudah benar</div>
+      <button class="btn-retry" onclick="loadPaymentData()">
+        <i class="fas fa-redo"></i> Coba Lagi
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxG_jlWMIVMElBfbkfVHZSZabcjJguLItRd4RySs_DiaJroTHR1ulOR57g-dOIF9gWDDw/exec';
+    
+    let allPayments = [];
+    let currentFilter = 'all';
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const userDataStr = localStorage.getItem('user');
+      const isLoggedIn = localStorage.getItem('isLoggedIn');
+      
+      if (!isLoggedIn || isLoggedIn !== 'true' || !userDataStr) {
+        alert('Anda belum login! Silakan login terlebih dahulu.');
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      try {
+        currentUser = JSON.parse(userDataStr);
+        console.log('Current user loaded:', currentUser);
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+        alert('Data user tidak valid. Silakan login ulang.');
+        localStorage.clear();
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      loadPaymentData();
+
+      const filterTabs = document.querySelectorAll('.filter-tab');
+      filterTabs.forEach(tab => {
+        tab.addEventListener('click', function () {
+          currentFilter = this.getAttribute('data-filter');
+
+          filterTabs.forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+
+          displayPayments(currentFilter);
+        });
+      });
+
+      setInterval(() => {
+        loadPaymentData();
+      }, 5 * 60 * 1000);
+    });
+
+    function formatCurrency(amount) {
+      return 'Rp ' + parseInt(amount).toLocaleString('id-ID');
+    }
+
+    function calculateDaysDiff(dateStr) {
+      const today = new Date();
+      const targetDate = new Date(dateStr);
+      const diffTime = targetDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(dateStr).toLocaleDateString('id-ID', options);
+    }
+
+    function getStatusText(status) {
+      const statusMap = {
+        'paid': 'Lunas',
+        'pending': 'Tertunda',
+        'overdue': 'Terlambat'
+      };
+      return statusMap[status] || status;
+    }
+
+    async function loadPaymentData() {
+      showLoading();
+      
+      try {
+        console.log('Loading payment data from:', APPS_SCRIPT_URL);
+        
+        // PERBAIKAN: Gunakan FormData untuk POST request
+        const formData = new FormData();
+        formData.append('action', 'getPayments');
+        
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        });
+        
+        console.log('Response status:', response.status);
+        
+        const data = await response.json();
+        console.log('Payment data received:', data);
+        
+        if (!data.success) {
+          throw new Error(data.message || 'Gagal memuat data');
+        }
+        
+        allPayments = data.data || [];
+        displayPayments(currentFilter);
+        updateSummary();
+        updateLastUpdate();
+        
+        hideLoading();
+        showContent();
+        
+      } catch (error) {
+        console.error('Error loading payment data:', error);
+        showError(error.message || 'Terjadi kesalahan saat memuat data');
+      }
+    }
+
+    function updateSummary() {
+      const paidCount = allPayments.filter(p => p.status === 'paid').length;
+      const pendingCount = allPayments.filter(p => p.status === 'pending').length;
+      const overdueCount = allPayments.filter(p => p.status === 'overdue').length;
+      
+      const totalAmount = allPayments
+        .filter(p => p.status !== 'paid')
+        .reduce((sum, p) => sum + parseFloat(p.jumlah || 0) + parseFloat(p.denda || 0), 0);
+
+      document.getElementById('paidCount').textContent = paidCount;
+      document.getElementById('pendingCount').textContent = pendingCount;
+      document.getElementById('overdueCount').textContent = overdueCount;
+      document.getElementById('totalAmount').textContent = formatCurrency(totalAmount);
+    }
+
+    function displayPayments(filter = 'all') {
+      const container = document.getElementById('paymentList');
+      container.innerHTML = '';
+
+      const filteredPayments = filter === 'all' 
+        ? allPayments 
+        : allPayments.filter(p => p.status === filter);
+
+      if (filteredPayments.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+            <div class="empty-text">Tidak ada data pembayaran</div>
+          </div>
+        `;
+        return;
+      }
+
+      filteredPayments.forEach(payment => {
+        const card = createPaymentCard(payment);
+        container.appendChild(card);
+      });
+    }
+
+    function createPaymentCard(payment) {
+      const card = document.createElement('div');
+      card.className = `payment-card ${payment.status}`;
+
+      const statusClass = `status-${payment.status}`;
+      const statusText = getStatusText(payment.status);
+      
+      let periodText = '';
+      let detailsHTML = '';
+
+      if (payment.status === 'overdue') {
+        const daysLate = Math.abs(calculateDaysDiff(payment.jatuhTempo));
+        periodText = `Jatuh Tempo: ${formatDate(payment.jatuhTempo)}`;
+        detailsHTML = `
+          <div class="detail-item">
+            <div class="detail-label">Jumlah</div>
+            <div class="detail-value payment-amount">${formatCurrency(payment.jumlah)}</div>
+          </div>
+          ${payment.denda ? `
+          <div class="detail-item">
+            <div class="detail-label">Denda</div>
+            <div class="detail-value" style="color: var(--danger);">${formatCurrency(payment.denda)}</div>
+          </div>
+          ` : ''}
+          <div class="detail-item">
+            <div class="detail-label">Terlambat</div>
+            <div class="detail-value">${daysLate} Hari</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Total Bayar</div>
+            <div class="detail-value payment-amount">${formatCurrency(parseFloat(payment.jumlah) + parseFloat(payment.denda || 0))}</div>
+          </div>
+        `;
+      } else if (payment.status === 'pending') {
+        const daysLeft = calculateDaysDiff(payment.jatuhTempo);
+        periodText = `Jatuh Tempo: ${formatDate(payment.jatuhTempo)}`;
+        detailsHTML = `
+          <div class="detail-item">
+            <div class="detail-label">Jumlah</div>
+            <div class="detail-value payment-amount">${formatCurrency(payment.jumlah)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Sisa Waktu</div>
+            <div class="detail-value">${daysLeft > 0 ? daysLeft + ' Hari' : 'Hari ini'}</div>
+          </div>
+        `;
+      } else if (payment.status === 'paid') {
+        periodText = `Dibayar: ${formatDate(payment.tanggalBayar)}`;
+        detailsHTML = `
+          <div class="detail-item">
+            <div class="detail-label">Jumlah</div>
+            <div class="detail-value payment-amount">${formatCurrency(payment.jumlah)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Metode</div>
+            <div class="detail-value">${payment.metodePembayaran || '-'}</div>
+          </div>
+        `;
+      }
+
+      const buttonHTML = payment.status === 'paid' 
+        ? `<button class="btn-action btn-paid"><i class="fas fa-check-circle"></i> Sudah Dibayar</button>`
+        : `<button class="btn-action" onclick="handlePayment(${payment.id}, '${payment.nama}', ${parseFloat(payment.jumlah) + parseFloat(payment.denda || 0)})"><i class="fas fa-credit-card"></i> Bayar Sekarang</button>`;
+
+      card.innerHTML = `
+        <div class="payment-header">
+          <div class="payment-info">
+            <h3>${payment.nama}</h3>
+            <div class="payment-period">${periodText}</div>
+          </div>
+          <span class="payment-status ${statusClass}">${statusText}</span>
+        </div>
+        <div class="payment-details">
+          ${detailsHTML}
+        </div>
+        ${buttonHTML}
+      `;
+
+      return card;
+    }
+
+    function handlePayment(id, nama, amount) {
+      if (!currentUser) {
+        alert('Data user tidak ditemukan. Silakan login ulang.');
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      const paymentData = {
+        id: id,
+        nama: nama,
+        amount: amount,
+        timestamp: new Date().toISOString(),
+        userId: currentUser.id,
+        userName: currentUser.nama,
+        userEmail: currentUser.email,
+        userSchool: currentUser.sekolah
+      };
+      
+      console.log('Payment data with user info:', paymentData);
+      sessionStorage.setItem('currentPayment', JSON.stringify(paymentData));
+      window.location.href = 'payment-gateway.html';
+    }
+
+    function showLoading() {
+      document.getElementById('loadingState').style.display = 'block';
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('errorState').style.display = 'none';
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingState').style.display = 'none';
+    }
+
+    function showContent() {
+      document.getElementById('mainContent').style.display = 'block';
+      document.getElementById('errorState').style.display = 'none';
+    }
+
+    function showError(message) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('errorState').style.display = 'block';
+      document.getElementById('errorMessage').textContent = message || 'Terjadi kesalahan';
+    }
+
+    function updateLastUpdate() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('id-ID', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      const dateString = now.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      document.getElementById('lastUpdate').textContent = 
+        `Terakhir diperbarui: ${dateString} pukul ${timeString}`;
+    }
+
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+</body>
+
+</html>

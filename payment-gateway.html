@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Gateway</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    :root {
+      --primary: #0d2b5e;
+      --secondary: #ff9800;
+      --success: #4caf50;
+      --danger: #f44336;
+      --white: #ffffff;
+      --light: #f8f9fa;
+      --gray: #757575;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+    }
+    body { background-color: #f5f5f5; color: #333; min-height: 100vh; }
+    .header { background: linear-gradient(135deg, var(--primary) 0%, #1a4d8f 100%); color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); position: sticky; top: 0; z-index: 100; }
+    .back-button { font-size: 24px; cursor: pointer; transition: transform 0.2s; }
+    .back-button:hover { transform: translateX(-3px); }
+    .header-title { font-size: 18px; font-weight: 600; }
+    .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+    .payment-summary { background: var(--white); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .summary-title { font-size: 14px; color: var(--gray); margin-bottom: 8px; }
+    .summary-name { font-size: 18px; font-weight: 700; color: #333; margin-bottom: 16px; }
+    .amount-box { background: linear-gradient(135deg, var(--primary) 0%, #1a4d8f 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 16px; }
+    .amount-label { font-size: 13px; opacity: 0.9; margin-bottom: 8px; }
+    .amount-value { font-size: 32px; font-weight: 700; }
+    .payment-methods { background: var(--white); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .section-icon { color: var(--secondary); }
+    .method-option { display: flex; align-items: center; gap: 16px; padding: 16px; border: 2px solid #e0e0e0; border-radius: 10px; margin-bottom: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .method-option:hover { border-color: var(--secondary); background: #fff8f0; }
+    .method-option.active { border-color: var(--secondary); background: #fff8f0; box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2); }
+    .method-icon { font-size: 28px; color: var(--primary); width: 50px; text-align: center; }
+    .method-info { flex: 1; }
+    .method-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .method-desc { font-size: 12px; color: var(--gray); }
+    .method-radio { width: 20px; height: 20px; accent-color: var(--secondary); }
+    .payment-details { background: var(--white); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); display: none; }
+    .payment-details.active { display: block; }
+    .detail-box { background: #f8f9fa; border-left: 4px solid var(--secondary); padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+    .detail-label { font-size: 12px; color: var(--gray); margin-bottom: 4px; }
+    .detail-value { font-size: 16px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 12px; }
+    .copy-button { background: var(--secondary); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+    .copy-button:hover { background: #f57c00; }
+    .qr-code { text-align: center; padding: 20px; background: white; border-radius: 8px; margin: 16px 0; }
+    .qr-placeholder { width: 200px; height: 200px; margin: 0 auto; background: #f0f0f0; border: 2px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: #999; }
+    .upload-section { background: var(--white); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .upload-box { border: 2px dashed #ccc; border-radius: 10px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+    .upload-box:hover { border-color: var(--secondary); background: #fff8f0; }
+    .upload-box.has-file { border-color: var(--success); background: #e8f5e9; }
+    .upload-icon { font-size: 48px; color: var(--gray); margin-bottom: 16px; }
+    .upload-text { font-size: 14px; color: var(--gray); margin-bottom: 8px; }
+    .file-info { display: none; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; }
+    .file-info.active { display: flex; }
+    .file-name { font-size: 14px; font-weight: 600; color: var(--success); }
+    .remove-file { color: var(--danger); cursor: pointer; }
+    input[type="file"] { display: none; }
+    .action-buttons { display: flex; gap: 12px; margin-top: 20px; }
+    .btn { flex: 1; padding: 14px 24px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-primary { background: var(--secondary); color: white; }
+    .btn-primary:hover { background: #f57c00; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3); }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: #e0e0e0; color: #333; }
+    .btn-secondary:hover { background: #d0d0d0; }
+    .instructions { background: #fff8f0; border-left: 4px solid var(--secondary); padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+    .instructions-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .instructions-list { list-style: none; font-size: 13px; color: #666; }
+    .instructions-list li { padding: 6px 0; padding-left: 24px; position: relative; }
+    .instructions-list li:before { content: "•"; position: absolute; left: 8px; color: var(--secondary); font-weight: bold; }
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; border-radius: var(--radius); padding: 40px; max-width: 400px; width: 90%; text-align: center; animation: modalSlideIn 0.3s ease; }
+    @keyframes modalSlideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .success-icon { font-size: 72px; color: var(--success); margin-bottom: 20px; }
+    .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+    .modal-text { font-size: 14px; color: var(--gray); margin-bottom: 24px; }
+    @media (max-width: 480px) {
+      .container { padding: 12px; }
+      .payment-summary, .payment-methods, .payment-details, .upload-section { padding: 16px; }
+      .amount-value { font-size: 28px; }
+      .method-option { padding: 12px; }
+      .method-icon { font-size: 24px; width: 40px; }
+      .action-buttons { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="back-button" onclick="goBack()">
+      <i class="fas fa-arrow-left"></i>
+    </div>
+    <div class="header-title">Payment Gateway</div>
+  </div>
+
+  <div class="container">
+    <div class="payment-summary">
+      <div class="summary-title">Detail Pembayaran</div>
+      <div class="summary-name" id="paymentName">-</div>
+      <div class="amount-box">
+        <div class="amount-label">Total Pembayaran</div>
+        <div class="amount-value" id="paymentAmount">Rp 0</div>
+      </div>
+    </div>
+
+    <div class="payment-methods">
+      <div class="section-title">
+        <i class="fas fa-credit-card section-icon"></i>
+        Pilih Metode Pembayaran
+      </div>
+
+      <div class="method-option" data-method="bank" onclick="selectMethod('bank')">
+        <div class="method-icon"><i class="fas fa-university"></i></div>
+        <div class="method-info">
+          <div class="method-name">Transfer Bank</div>
+          <div class="method-desc">BCA, Mandiri, BNI, BRI</div>
+        </div>
+        <input type="radio" name="payment-method" class="method-radio">
+      </div>
+
+      <div class="method-option" data-method="ewallet" onclick="selectMethod('ewallet')">
+        <div class="method-icon"><i class="fas fa-wallet"></i></div>
+        <div class="method-info">
+          <div class="method-name">E-Wallet</div>
+          <div class="method-desc">GoPay, OVO, Dana, ShopeePay</div>
+        </div>
+        <input type="radio" name="payment-method" class="method-radio">
+      </div>
+
+      <div class="method-option" data-method="va" onclick="selectMethod('va')">
+        <div class="method-icon"><i class="fas fa-money-check-alt"></i></div>
+        <div class="method-info">
+          <div class="method-name">Virtual Account</div>
+          <div class="method-desc">VA BCA, Mandiri, BNI, BRI</div>
+        </div>
+        <input type="radio" name="payment-method" class="method-radio">
+      </div>
+
+      <div class="method-option" data-method="qris" onclick="selectMethod('qris')">
+        <div class="method-icon"><i class="fas fa-qrcode"></i></div>
+        <div class="method-info">
+          <div class="method-name">QRIS</div>
+          <div class="method-desc">Scan QR dengan semua aplikasi</div>
+        </div>
+        <input type="radio" name="payment-method" class="method-radio">
+      </div>
+    </div>
+
+    <div class="payment-details" id="details-bank">
+      <div class="section-title">
+        <i class="fas fa-info-circle section-icon"></i>
+        Instruksi Transfer Bank
+      </div>
+      <div class="detail-box">
+        <div class="detail-label">Nama Bank</div>
+        <div class="detail-value">Bank BCA</div>
+      </div>
+      <div class="detail-box">
+        <div class="detail-label">Nomor Rekening</div>
+        <div class="detail-value">
+          <span id="accountNumber">1234567890</span>
+          <button class="copy-button" onclick="copyText('accountNumber')">
+            <i class="fas fa-copy"></i> Salin
+          </button>
+        </div>
+      </div>
+      <div class="detail-box">
+        <div class="detail-label">Atas Nama</div>
+        <div class="detail-value">Yayasan Pendidikan ABC</div>
+      </div>
+      <div class="instructions">
+        <div class="instructions-title">
+          <i class="fas fa-exclamation-triangle"></i>
+          Cara Pembayaran
+        </div>
+        <ul class="instructions-list">
+          <li>Transfer sesuai nominal yang tertera</li>
+          <li>Simpan bukti transfer</li>
+          <li>Upload bukti transfer di bawah ini</li>
+          <li>Tunggu konfirmasi dari admin (1x24 jam)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="payment-details" id="details-ewallet">
+      <div class="section-title">
+        <i class="fas fa-info-circle section-icon"></i>
+        Instruksi E-Wallet
+      </div>
+      <div class="detail-box">
+        <div class="detail-label">Nomor E-Wallet (GoPay/OVO/Dana)</div>
+        <div class="detail-value">
+          <span id="ewalletNumber">081234567890</span>
+          <button class="copy-button" onclick="copyText('ewalletNumber')">
+            <i class="fas fa-copy"></i> Salin
+          </button>
+        </div>
+      </div>
+      <div class="detail-box">
+        <div class="detail-label">Atas Nama</div>
+        <div class="detail-value">Yayasan Pendidikan ABC</div>
+      </div>
+      <div class="instructions">
+        <div class="instructions-title">
+          <i class="fas fa-exclamation-triangle"></i>
+          Cara Pembayaran
+        </div>
+        <ul class="instructions-list">
+          <li>Transfer ke nomor e-wallet di atas</li>
+          <li>Screenshot bukti pembayaran</li>
+          <li>Upload bukti di bawah ini</li>
+          <li>Tunggu konfirmasi admin (1x24 jam)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="payment-details" id="details-va">
+      <div class="section-title">
+        <i class="fas fa-info-circle section-icon"></i>
+        Virtual Account Number
+      </div>
+      <div class="detail-box">
+        <div class="detail-label">Nomor Virtual Account</div>
+        <div class="detail-value">
+          <span id="vaNumber">8808123456789012</span>
+          <button class="copy-button" onclick="copyText('vaNumber')">
+            <i class="fas fa-copy"></i> Salin
+          </button>
+        </div>
+      </div>
+      <div class="instructions">
+        <div class="instructions-title">
+          <i class="fas fa-exclamation-triangle"></i>
+          Cara Pembayaran
+        </div>
+        <ul class="instructions-list">
+          <li>Transfer ke nomor VA di atas</li>
+          <li>Pembayaran otomatis terverifikasi</li>
+          <li>Simpan bukti transfer</li>
+          <li>Upload bukti di bawah ini (opsional)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="payment-details" id="details-qris">
+      <div class="section-title">
+        <i class="fas fa-info-circle section-icon"></i>
+        Scan QR Code
+      </div>
+      <div class="qr-code">
+        <div class="qr-placeholder">
+          <i class="fas fa-qrcode"></i>
+        </div>
+        <p style="margin-top: 12px; font-size: 13px; color: var(--gray);">
+          Scan dengan aplikasi pembayaran Anda
+        </p>
+      </div>
+      <div class="instructions">
+        <div class="instructions-title">
+          <i class="fas fa-exclamation-triangle"></i>
+          Cara Pembayaran
+        </div>
+        <ul class="instructions-list">
+          <li>Buka aplikasi pembayaran (GoPay, OVO, Dana, dll)</li>
+          <li>Scan QR Code di atas</li>
+          <li>Selesaikan pembayaran</li>
+          <li>Upload bukti pembayaran di bawah ini</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="upload-section" id="uploadSection" style="display: none;">
+      <div class="section-title">
+        <i class="fas fa-cloud-upload-alt section-icon"></i>
+        Upload Bukti Transfer
+      </div>
+      <div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">
+          <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <div class="upload-text">Klik untuk upload bukti transfer</div>
+        <div class="upload-text" style="font-size: 12px;">Format: JPG, PNG, PDF (Max 5MB)</div>
+        <div class="file-info" id="fileInfo">
+          <i class="fas fa-check-circle" style="color: var(--success); font-size: 20px;"></i>
+          <span class="file-name" id="fileName"></span>
+          <i class="fas fa-times-circle remove-file" onclick="removeFile(event)"></i>
+        </div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*,application/pdf" onchange="handleFileSelect(event)">
+      <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="goBack()">
+          <i class="fas fa-arrow-left"></i> Kembali
+        </button>
+        <button class="btn btn-primary" id="submitBtn" onclick="submitPayment()" disabled>
+          <i class="fas fa-paper-plane"></i> Kirim Bukti
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="successModal">
+    <div class="modal-content">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="modal-title">Pembayaran Terkirim!</div>
+      <div class="modal-text">
+        Bukti pembayaran Anda telah diterima. Admin akan memverifikasi dalam 1x24 jam. Anda akan menerima notifikasi setelah pembayaran diverifikasi.
+      </div>
+      <button class="btn btn-primary" onclick="finishPayment()">
+        <i class="fas fa-home"></i> Kembali ke Beranda
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxG_jlWMIVMElBfbkfVHZSZabcjJguLItRd4RySs_DiaJroTHR1ulOR57g-dOIF9gWDDw/exec';
+    
+    let selectedMethod = null;
+    let selectedFile = null;
+    let paymentData = null;
+    let currentUser = null;
+
+    window.addEventListener('DOMContentLoaded', function() {
+      const userDataStr = localStorage.getItem('user');
+      if (!userDataStr) {
+        alert('Anda belum login! Akan dialihkan ke halaman login.');
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      try {
+        currentUser = JSON.parse(userDataStr);
+        console.log('Current user:', currentUser);
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+        alert('Data user tidak valid. Silakan login ulang.');
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      const storedData = sessionStorage.getItem('currentPayment');
+      if (storedData) {
+        paymentData = JSON.parse(storedData);
+        document.getElementById('paymentName').textContent = paymentData.nama;
+        document.getElementById('paymentAmount').textContent = formatCurrency(paymentData.amount);
+      } else {
+        alert('Data pembayaran tidak ditemukan');
+        window.location.href = 'pembayaran.html';
+      }
+    });
+
+    function formatCurrency(amount) {
+      return 'Rp ' + parseInt(amount).toLocaleString('id-ID');
+    }
+
+    function selectMethod(method) {
+      selectedMethod = method;
+      
+      document.querySelectorAll('.method-option').forEach(opt => {
+        opt.classList.remove('active');
+        opt.querySelector('.method-radio').checked = false;
+      });
+      
+      const selectedOption = document.querySelector(`[data-method="${method}"]`);
+      selectedOption.classList.add('active');
+      selectedOption.querySelector('.method-radio').checked = true;
+
+      document.querySelectorAll('.payment-details').forEach(detail => {
+        detail.classList.remove('active');
+      });
+
+      document.getElementById(`details-${method}`).classList.add('active');
+      document.getElementById('uploadSection').style.display = 'block';
+
+      setTimeout(() => {
+        document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
+    function copyText(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Berhasil disalin: ' + text);
+      });
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert('Ukuran file terlalu besar! Maksimal 5MB');
+          return;
+        }
+
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        if (!validTypes.includes(file.type)) {
+          alert('Format file tidak didukung! Gunakan JPG, PNG, atau PDF');
+          return;
+        }
+
+        selectedFile = file;
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('uploadBox').classList.add('has-file');
+        document.getElementById('fileInfo').classList.add('active');
+        document.getElementById('submitBtn').disabled = false;
+      }
+    }
+
+    function removeFile(event) {
+      event.stopPropagation();
+      selectedFile = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('uploadBox').classList.remove('has-file');
+      document.getElementById('fileInfo').classList.remove('active');
+      document.getElementById('submitBtn').disabled = true;
+    }
+
+    async function submitPayment() {
+      if (!selectedMethod) {
+        alert('Pilih metode pembayaran terlebih dahulu!');
+        return;
+      }
+
+      if (!selectedFile) {
+        alert('Upload bukti transfer terlebih dahulu!');
+        return;
+      }
+
+      if (!currentUser) {
+        alert('Data user tidak ditemukan. Silakan login ulang.');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      document.getElementById('submitBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+      document.getElementById('submitBtn').disabled = true;
+
+      try {
+        const fileBase64 = await fileToBase64(selectedFile);
+        
+        const submitData = {
+          action: 'submitPaymentProof',
+          paymentId: paymentData.id,
+          paymentName: paymentData.nama,
+          amount: paymentData.amount,
+          paymentMethod: getMethodName(selectedMethod),
+          proofFileName: selectedFile.name,
+          proofFileUrl: fileBase64.substring(0, 100) + '...',
+          studentName: currentUser.nama || 'Unknown',
+          studentId: currentUser.id || 'N/A',
+          studentEmail: currentUser.email || '',
+          studentSchool: currentUser.sekolah || '',
+          notes: 'Pembayaran dari ' + currentUser.nama + ' via ' + getMethodName(selectedMethod)
+        };
+
+        console.log('Submitting payment data:', submitData);
+
+        // PERBAIKAN: Gunakan FormData untuk POST
+        const formData = new FormData();
+        for (const key in submitData) {
+          formData.append(key, submitData[key]);
+        }
+
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        console.log('Submit result:', result);
+
+        if (result.success) {
+          document.getElementById('successModal').classList.add('active');
+          sessionStorage.removeItem('currentPayment');
+        } else {
+          alert('Gagal mengirim: ' + (result.message || 'Unknown error'));
+          document.getElementById('submitBtn').innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Bukti';
+          document.getElementById('submitBtn').disabled = false;
+        }
+
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Gagal mengirim bukti pembayaran. Periksa koneksi internet Anda.');
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Bukti';
+        document.getElementById('submitBtn').disabled = false;
+      }
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    function getMethodName(method) {
+      const methodNames = {
+        'bank': 'Transfer Bank',
+        'ewallet': 'E-Wallet',
+        'va': 'Virtual Account',
+        'qris': 'QRIS'
+      };
+      return methodNames[method] || method;
+    }
+
+    function finishPayment() {
+      window.location.href = 'pembayaran.html';
+    }
+
+    function goBack() {
+      if (confirm('Batalkan proses pembayaran?')) {
+        window.location.href = 'pembayaran.html';
+      }
+    }
+  </script>
+</body>
+</html>

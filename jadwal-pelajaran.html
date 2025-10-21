@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jadwal Pelajaran</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+      --primary: #0d2b5e;
+      --primary-dark: #0a2148;
+      --secondary: #ff9800;
+      --accent: #ffcc00;
+      --monday: #e3f2fd;
+      --tuesday: #f3e5f5;
+      --wednesday: #e8f5e9;
+      --thursday: #fff3e0;
+      --friday: #ffebee;
+      --saturday: #e0f7fa;
+      --light: #f8f9fa;
+      --white: #ffffff;
+      --gray: #6c757d;
+      --light-gray: #e9ecef;
+      --dark: #343a40;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      color: var(--dark);
+      min-height: 100vh;
+      padding-bottom: 20px;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .back-button {
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .refresh-button {
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .refresh-button:hover {
+      transform: rotate(180deg);
+    }
+
+    /* Main Content */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .schedule-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* Weekly Schedule */
+    .week-days {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .day-tab {
+      flex: 1;
+      min-width: 80px;
+      padding: 12px 8px;
+      text-align: center;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--light);
+      color: var(--gray);
+    }
+
+    .day-tab.active {
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .day-tab.mon { background: var(--monday); }
+    .day-tab.tue { background: var(--tuesday); }
+    .day-tab.wed { background: var(--wednesday); }
+    .day-tab.thu { background: var(--thursday); }
+    .day-tab.fri { background: var(--friday); }
+    .day-tab.sat { background: var(--saturday); }
+
+    .day-tab.active.mon { background: #2196f3; }
+    .day-tab.active.tue { background: #9c27b0; }
+    .day-tab.active.wed { background: #4caf50; }
+    .day-tab.active.thu { background: #ff9800; }
+    .day-tab.active.fri { background: #f44336; }
+    .day-tab.active.sat { background: #00bcd4; }
+
+    /* Lessons Grid */
+    .lessons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .lesson-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lesson-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--secondary);
+    }
+
+    .lesson-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .lesson-time {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--secondary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .lesson-subject {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .lesson-info {
+      font-size: 14px;
+      color: var(--gray);
+      line-height: 1.5;
+    }
+
+    .lesson-teacher {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--light-gray);
+    }
+
+    /* Empty State */
+    .empty-schedule {
+      text-align: center;
+      padding: 40px 20px;
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      color: var(--light-gray);
+      margin-bottom: 16px;
+    }
+
+    .empty-text {
+      font-size: 16px;
+      color: var(--gray);
+      font-weight: 600;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray);
+    }
+
+    .spinner {
+      border: 3px solid var(--light-gray);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .retry-button {
+      margin-top: 16px;
+      padding: 10px 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+
+    .retry-button:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        padding: 14px 16px;
+      }
+
+      .day-tab {
+        min-width: 60px;
+        padding: 10px 4px;
+        font-size: 13px;
+      }
+
+      .lessons-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .lesson-card {
+        padding: 16px;
+      }
+
+      .lesson-subject {
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 14px;
+      }
+
+      .day-tab {
+        min-width: 50px;
+        padding: 10px 2px;
+        font-size: 12px;
+      }
+
+      .lesson-time, .lesson-info, .lesson-teacher {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="back-button" id="backButton">
+      <i class="fas fa-arrow-left"></i>
+    </div>
+    <div class="header-title">Jadwal Pelajaran</div>
+    <div class="refresh-button" id="refreshButton">
+      <i class="fas fa-sync-alt"></i>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container">
+    <h2 class="schedule-title">Jadwal Minggu Ini</h2>
+
+    <!-- Day Tabs -->
+    <div class="week-days">
+      <div class="day-tab mon" data-day="senin">Senin</div>
+      <div class="day-tab tue" data-day="selasa">Selasa</div>
+      <div class="day-tab wed" data-day="rabu">Rabu</div>
+      <div class="day-tab thu" data-day="kamis">Kamis</div>
+      <div class="day-tab fri" data-day="jumat">Jumat</div>
+      <div class="day-tab sat" data-day="sabtu">Sabtu</div>
+    </div>
+
+    <!-- Lessons Content -->
+    <div id="lessons-container">
+      <div class="loading">
+        <div class="spinner"></div>
+        <div>Memuat jadwal...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========================================
+    // KONFIGURASI GOOGLE APPS SCRIPT
+    // ========================================
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxG_jlWMIVMElBfbkfVHZSZabcjJguLItRd4RySs_DiaJroTHR1ulOR57g-dOIF9gWDDw/exec';
+    
+    // ========================================
+    // STATE MANAGEMENT
+    // ========================================
+    let jadwalData = null;
+    let currentDay = 'senin';
+    let isLoading = false;
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+    
+    function formatTime(timeStr) {
+      if (!timeStr) return '—';
+      
+      if (timeStr.includes(':')) {
+        const parts = timeStr.split(':');
+        const hours = parts[0].padStart(2, '0');
+        const minutes = parts[1] ? parts[1].padStart(2, '0') : '00';
+        return `${hours}:${minutes}`;
+      }
+      
+      return timeStr;
+    }
+
+    function showLoading() {
+      const container = document.getElementById('lessons-container');
+      container.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <div>Memuat jadwal...</div>
+        </div>
+      `;
+    }
+
+    function showError(message) {
+      const container = document.getElementById('lessons-container');
+      container.innerHTML = `
+        <div class="empty-schedule">
+          <div class="empty-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="empty-text">Gagal memuat jadwal</div>
+          <div style="margin-top: 12px; font-size: 13px; color: var(--gray);">
+            ${message}
+          </div>
+          <button class="retry-button" onclick="loadJadwal()">
+            <i class="fas fa-redo"></i> Coba Lagi
+          </button>
+        </div>
+      `;
+    }
+
+    // ========================================
+    // RENDER FUNCTIONS
+    // ========================================
+    
+    function renderJadwalForDay(hari, data) {
+      const container = document.getElementById('lessons-container');
+      
+      if (!data || data.length === 0) {
+        container.innerHTML = `
+          <div class="empty-schedule">
+            <div class="empty-icon"><i class="fas fa-calendar-day"></i></div>
+            <div class="empty-text">Tidak ada jadwal pada hari ${hari}</div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '<div class="lessons-grid">';
+      data.forEach(lesson => {
+        html += `
+          <div class="lesson-card">
+            <div class="lesson-time">
+              <i class="far fa-clock"></i> ${formatTime(lesson.jam_mulai)} - ${formatTime(lesson.jam_selesai)}
+            </div>
+            <div class="lesson-subject">${lesson.mata_pelajaran || 'Mata Pelajaran'}</div>
+            <div class="lesson-info">${lesson.kelas || 'Kelas'} • ${lesson.ruangan || 'Ruangan'}</div>
+            <div class="lesson-teacher">
+              <i class="fas fa-chalkboard-teacher"></i> ${lesson.guru || 'Guru'}
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // ========================================
+    // DATA LOADING
+    // ========================================
+    
+    async function loadJadwal() {
+      if (isLoading) return;
+      
+      isLoading = true;
+      showLoading();
+      
+      try {
+        console.log('Fetching from:', APPS_SCRIPT_URL);
+        
+        const response = await fetch(`${APPS_SCRIPT_URL}?action=get_all`, {
+          method: 'GET',
+          redirect: 'follow',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Response data:', result);
+
+        if (result.success && result.data) {
+          jadwalData = result.data;
+          showDay(currentDay);
+          console.log('Data loaded successfully');
+        } else {
+          throw new Error(result.message || 'Data tidak valid');
+        }
+
+      } catch (error) {
+        console.error('Load error:', error);
+        showError(error.message);
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    // ========================================
+    // UI INTERACTIONS
+    // ========================================
+    
+    function showDay(hari) {
+      currentDay = hari;
+      
+      // Update active tab
+      document.querySelectorAll('.day-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.getAttribute('data-day') === hari);
+      });
+
+      // Render jadwal
+      if (jadwalData) {
+        renderJadwalForDay(hari, jadwalData[hari] || []);
+      }
+    }
+
+    // ========================================
+    // EVENT LISTENERS
+    // ========================================
+    
+    document.getElementById('backButton').addEventListener('click', () => {
+      window.history.back();
+    });
+
+    document.getElementById('refreshButton').addEventListener('click', () => {
+      loadJadwal();
+    });
+
+    document.querySelectorAll('.day-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const hari = tab.getAttribute('data-day');
+        showDay(hari);
+      });
+    });
+
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    
+    function init() {
+      // Tentukan hari ini
+      const dayMap = {
+        0: 'senin', // Minggu → default ke Senin
+        1: 'senin',
+        2: 'selasa',
+        3: 'rabu',
+        4: 'kamis',
+        5: 'jumat',
+        6: 'sabtu'
+      };
+      
+      const today = new Date().getDay();
+      currentDay = dayMap[today];
+      
+      // Load data
+      loadJadwal();
+    }
+
+    // Start the app
+    init();
+  </script>
+</body>
+
+</html>
